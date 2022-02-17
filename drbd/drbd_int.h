@@ -1114,6 +1114,7 @@ struct drbd_connection {
 	 * TODO: RCU */
 	struct drbd_request *req_ack_pending;
 	struct drbd_request *req_not_net_done;
+	struct drbd_request *req_not_net_done_newest;
 
 	unsigned int s_cb_nr; /* keeps counting up */
 	unsigned int r_cb_nr; /* keeps counting up */

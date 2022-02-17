@@ -605,6 +605,13 @@ static void advance_conn_req_next(struct drbd_connection *connection, struct drb
 	connection->todo.req_next = req;
 }
 
+static void unset_cache_ptr_if_eq(struct drbd_request **cache_ptr, struct drbd_request *req)
+{
+	struct drbd_request *new_req = NULL;
+
+	cmpxchg(cache_ptr, req, new_req);
+}
+
 static void set_cache_ptr_if_null(struct drbd_request **cache_ptr, struct drbd_request *req)
 {
 	struct drbd_request *prev_req, *old_req = NULL;
@@ -732,6 +739,7 @@ static void mod_rq_state(struct drbd_request *req, struct bio_and_error *m,
 		if (!(old_net & RQ_NET_DONE)) {
 			atomic_add(req_payload_sectors(req), &peer_device->connection->ap_in_flight);
 			set_cache_ptr_if_null(&connection->req_not_net_done, req);
+			WRITE_ONCE(connection->req_not_net_done_newest, req);
 		}
 		if (req->net_rq_state[idx] & RQ_NET_PENDING)
 			set_cache_ptr_if_null(&connection->req_ack_pending, req);
@@ -811,6 +819,7 @@ static void mod_rq_state(struct drbd_request *req, struct bio_and_error *m,
 				  req, RQ_NET_SENT | RQ_NET_PENDING, 0);
 		advance_cache_ptr(connection, &connection->req_not_net_done,
 				  req, RQ_NET_SENT, RQ_NET_DONE);
+		unset_cache_ptr_if_eq(&connection->req_not_net_done_newest, req);
 	}
 
 	/* potentially complete and destroy */

@@ -40,6 +40,9 @@
 #ifndef READ_ONCE
 #define READ_ONCE ACCESS_ONCE
 #endif
+#ifndef WRITE_ONCE
+#define WRITE_ONCE(x, val) do { x = val; } while(0)
+#endif
 
 /* introduced in v4.3-8058-g71baba4b92dc */
 #ifndef __GFP_RECLAIM

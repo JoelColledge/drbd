@@ -2612,7 +2612,17 @@ static bool dequeue_work_batch(struct drbd_work_queue *queue, struct list_head *
 static struct drbd_request *__next_request_for_connection(
 		struct drbd_connection *connection)
 {
-	struct drbd_request *req;
+	struct drbd_request *req = READ_ONCE(connection->req_not_net_done_newest);
+
+	if (req) {
+		list_for_each_entry_continue_rcu(req, &connection->resource->transfer_log, tl_requests) {
+			unsigned s = req->net_rq_state[connection->peer_node_id];
+			if (!(s & RQ_NET_QUEUED))
+				continue;
+			return req;
+		}
+		return NULL;
+	}
 
 	list_for_each_entry_rcu(req, &connection->resource->transfer_log, tl_requests) {
 		unsigned s = req->net_rq_state[connection->peer_node_id];
