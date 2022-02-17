@@ -147,7 +147,7 @@ build:for-tests:
         export DRBD_VERSION=$DRBD_VERSION
         export DRBD_UTILS_VERSION=9.0.0.latest-*
         export DRBD9_TESTS_VERSION=latest
-        ./drbd-test-bundle/virter/run-test.sh "$@"
+        ./drbd-test-bundle/virter/run-test.sh --base-image alma-8-drbd-k305 "$@"
       }
   dependencies:
     - build:for-tests
